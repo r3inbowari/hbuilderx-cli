@@ -1,0 +1,15 @@
+{
+  "finger": "1777945899",
+  "log_level": "debug",
+  "check_link": "",
+  "auto_update": true,
+  "max_retry_count": 3,
+  "api_addr": "127.0.0.1:443",
+  "ca_key": "server.key",
+  "ca_crt": "server.crt",
+  "log_path": "",
+  "jwt_enable": true,
+  "jwt_secret": "sdasdasdasfasdasd",
+  "jwt_timeout": 72,
+  "jwt_md5": "48dc65a51b480244c296c44de7be53f5"
+}

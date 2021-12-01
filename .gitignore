@@ -1,0 +1,11 @@
+res/*
+config/*
+meiwobuxing_*
+xiguazhu_app/*
+build/*
+.idea
+*.crt
+*.key
+*.pem
+._.DS_Store
+.DS_Store
