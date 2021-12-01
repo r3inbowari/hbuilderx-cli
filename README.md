@@ -1,2 +1,3 @@
 # hbuilderx-cli
-基于hbuilderx cli的批量云打包工具 
+a simple wrapper around hbuilderx cli in Go
+这是一个使用go封装hbuilderx cli的批量云打包工具 
