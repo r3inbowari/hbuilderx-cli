@@ -2,10 +2,10 @@
 
 set packageName=cmd
 set appName=meiwobuxing
-set buildVersion=v1.7.7
+set buildVersion=v1.8.1
 set major=1
-set minor=7
-set patch=7
+set minor=8
+set patch=1
 set mode=REL
 
 for /f "delims=" %%i in ('go version') do (set goVersion=%%i)

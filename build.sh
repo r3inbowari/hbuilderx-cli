@@ -6,10 +6,10 @@
 
 packageName=cmd
 appName=meiwobuxing
-buildVersion=v1.7.7
+buildVersion=v1.8.1
 major=1
-minor=7
-patch=7
+minor=8
+patch=1
 mode=REL
 
 goVersion=$(go version)
