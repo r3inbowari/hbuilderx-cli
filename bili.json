@@ -1,11 +1,15 @@
 {
   "finger": "1777945899",
-  "api_addr": ":9090",
   "log_level": "debug",
   "check_link": "",
   "auto_update": true,
+  "max_retry_count": 3,
+  "api_addr": ":9090",
+  "ca_key": "",
+  "ca_crt": "",
+  "log_path": "nil",
   "jwt_enable": true,
-  "jwt_secret": "sdasdasdasfasdasd",
+  "jwt_secret": "r3inbowari",
   "jwt_timeout": 72,
   "jwt_md5": "48dc65a51b480244c296c44de7be53f5"
 }

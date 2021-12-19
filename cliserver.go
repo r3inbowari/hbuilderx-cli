@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"github.com/gorilla/mux"
+	. "github.com/r3inbowari/zlog"
 	"github.com/sirupsen/logrus"
 	"github.com/wuwenbao/gcors"
 	"net/http"
@@ -164,16 +165,16 @@ func AppInfo() {
 		time.Sleep(time.Second * 3)
 		os.Exit(33)
 	}
-	Blue(" ________  ________  ___  ________  ________  ___     ")
-	Blue("|\\   ____\\|\\   __  \\|\\  \\|\\   ____\\|\\   __  \\|\\  \\          PACKAGER #UNOFFICIAL " + Up.ReleaseTag[:7] + "..." + Up.ReleaseTag[33:])
-	Blue("\\ \\  \\___|\\ \\  \\|\\  \\ \\  \\ \\  \\___|\\ \\  \\|\\  \\ \\  \\         -... .. .-.. .. -.-. --- .. -. " + Up.VersionStr)
-	Blue(" \\ \\  \\    \\ \\   __  \\ \\  \\ \\  \\    \\ \\   __  \\ \\  \\        Running: CLI Server" + " by cyt(r3inbowari)")
+	Log.Blue(" ________  ________  ___  ________  ________  ___     ")
+	Log.Blue("|\\   ____\\|\\   __  \\|\\  \\|\\   ____\\|\\   __  \\|\\  \\          PACKAGER #UNOFFICIAL " + Up.ReleaseTag[:7] + "..." + Up.ReleaseTag[33:])
+	Log.Blue("\\ \\  \\___|\\ \\  \\|\\  \\ \\  \\ \\  \\___|\\ \\  \\|\\  \\ \\  \\         -... .. .-.. .. -.-. --- .. -. " + Up.VersionStr)
+	Log.Blue(" \\ \\  \\    \\ \\   __  \\ \\  \\ \\  \\    \\ \\   __  \\ \\  \\        Running: CLI Server" + " by cyt(r3inbowari)")
 	if RunningMode == "server" {
-		Blue("  \\ \\  \\____\\ \\  \\ \\  \\ \\  \\ \\  \\____\\ \\  \\ \\  \\ \\  \\       Listened: " + GetConfig(false).APIAddr)
+		Log.Blue("  \\ \\  \\____\\ \\  \\ \\  \\ \\  \\ \\  \\____\\ \\  \\ \\  \\ \\  \\       Listened: " + GetConfig(false).APIAddr)
 	} else {
-		Blue("  \\ \\  \\____\\ \\  \\ \\  \\ \\  \\ \\  \\____\\ \\  \\ \\  \\ \\  \\       Port: UNSUPPORTED")
+		Log.Blue("  \\ \\  \\____\\ \\  \\ \\  \\ \\  \\ \\  \\____\\ \\  \\ \\  \\ \\  \\       Port: UNSUPPORTED")
 	}
-	Blue("   \\ \\_______\\ \\__\\ \\__\\ \\__\\ \\_______\\ \\__\\ \\__\\ \\__\\      PID: " + strconv.Itoa(os.Getpid()))
-	Blue("    \\|_______|\\|__|\\|__|\\|__|\\|_______|\\|__|\\|__|\\|__|      Built on " + Up.BuildTime)
-	Blue("")
+	Log.Blue("   \\ \\_______\\ \\__\\ \\__\\ \\__\\ \\_______\\ \\__\\ \\__\\ \\__\\      PID: " + strconv.Itoa(os.Getpid()))
+	Log.Blue("    \\|_______|\\|__|\\|__|\\|__|\\|_______|\\|__|\\|__|\\|__|      Built on " + Up.BuildTime)
+	Log.Blue("")
 }

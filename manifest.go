@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	. "github.com/r3inbowari/zlog"
 	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"

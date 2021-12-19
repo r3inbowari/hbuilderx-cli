@@ -2,6 +2,7 @@ package meiwobuxing
 
 import (
 	. "github.com/klauspost/cpuid/v2"
+	. "github.com/r3inbowari/zlog"
 	"net"
 	"os"
 	"strconv"

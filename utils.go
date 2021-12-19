@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	guuid "github.com/google/uuid"
+	. "github.com/r3inbowari/zlog"
 	"github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/text/encoding/simplifiedchinese"

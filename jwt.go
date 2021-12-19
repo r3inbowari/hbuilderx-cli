@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	. "github.com/r3inbowari/zlog"
 	"github.com/sirupsen/logrus"
 	"time"
 )

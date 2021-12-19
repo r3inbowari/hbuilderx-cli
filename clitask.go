@@ -3,6 +3,7 @@ package meiwobuxing
 import (
 	"context"
 	"fmt"
+	. "github.com/r3inbowari/zlog"
 	"github.com/sirupsen/logrus"
 	"time"
 )

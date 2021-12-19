@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/hpcloud/tail"
-	"gopkg.in/alecthomas/kingpin.v2"
+	. "github.com/r3inbowari/zlog"
 	"meiwobuxing"
 	"os"
 	"os/user"
 	"runtime"
 	"time"
+
+	"github.com/hpcloud/tail"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
@@ -49,7 +51,8 @@ func main() {
 	// 配置插件
 	meiwobuxing.InitConfig()
 	// 日志
-	meiwobuxing.InitLogger(meiwobuxing.Up.BuildMode, OpenTracker)
+	InitGlobalLogger().SetBuildMode(mode).SetRotate(meiwobuxing.GetConfig(false).RotateEnable).SetScreen(true)
+	OpenTracker()
 	// 更新服务与权限
 	meiwobuxing.SoftwareUpdate(false)
 	// 脚手架初始化
@@ -64,19 +67,23 @@ func dev() {
 		gitHash = "cb0dc838e04e841f193f383e06e9d25a534c5809"
 		goVersion = runtime.Version()
 		releaseVersion = "ver[DEV]"
+		fmt.Printf("[D] go version: %s\n", goVersion)
 	}
 }
 
 func OpenTracker() {
 	fileName := ""
 	u, err := user.Current()
+	if err != nil {
+		return
+	}
 	if meiwobuxing.GetConfig(false).LogPath == "" {
 		fileName = u.HomeDir + "/AppData/Roaming/HBuilder X/.log"
 	} else {
 		fileName = meiwobuxing.GetConfig(false).LogPath
 	}
 	if !meiwobuxing.Exists(fileName) {
-		meiwobuxing.Log.Warn("[Track] not found log")
+		Log.Warn("[Track] not found log")
 		return
 	}
 	config := tail.Config{
@@ -85,11 +92,11 @@ func OpenTracker() {
 		Location:  &tail.SeekInfo{Offset: 0, Whence: 0}, // Seek
 		MustExist: false,                                // 必须存在
 		Poll:      true,
-		Logger:    meiwobuxing.Log,
+		Logger:    Log,
 	}
 	tails, err := tail.TailFile(fileName, config)
 	if err != nil {
-		meiwobuxing.Log.Error("[Tracker] tail file failed, err:", err)
+		Log.Error("[Tracker] tail file failed, err:", err)
 		return
 	}
 	var (
@@ -99,7 +106,7 @@ func OpenTracker() {
 	for {
 		line, ok = <-tails.Lines
 		if !ok {
-			meiwobuxing.Log.Errorf("[Tracker] tail file close reopen, filename:%s\n", tails.Filename)
+			Log.Errorf("[Tracker] tail file close reopen, filename:%s\n", tails.Filename)
 			time.Sleep(time.Second)
 			continue
 		}

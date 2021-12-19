@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	. "github.com/r3inbowari/zlog"
 	"github.com/sirupsen/logrus"
 	"os"
 	"regexp"
@@ -22,10 +23,11 @@ type LocalConfig struct {
 	CaCert        string    `json:"ca_crt"`          // CA 证书
 	MaxRetryCount int       `json:"max_retry_count"` // 重试次数
 	LogPath       string    `json:"log_path"`        // hbx log
-	JwtEnable     bool      `json:"jwt_enable"`      // 鉴权
-	JwtSecret     string    `json:"jwt_secret"`
-	JwtTimeout    int       `json:"jwt_timeout"`
-	JwtMD5        string    `json:"jwt_md5"`
+	JwtEnable     bool      `json:"jwt_enable"`      // jwt 启动
+	JwtSecret     string    `json:"jwt_secret"`      // jwt 密钥
+	JwtTimeout    int       `json:"jwt_timeout"`     // jwt 超时
+	JwtMD5        string    `json:"jwt_md5"`         // hash 结果
+	RotateEnable  bool      `json:"rotate_enable"`   // 日志存储启动
 }
 
 var config = new(LocalConfig)

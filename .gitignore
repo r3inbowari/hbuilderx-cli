@@ -9,3 +9,5 @@ build/*
 *.pem
 ._.DS_Store
 .DS_Store
+.vscode
+bili.json

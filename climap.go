@@ -3,6 +3,7 @@ package meiwobuxing
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	. "github.com/r3inbowari/zlog"
 	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"

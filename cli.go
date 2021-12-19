@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/LyricTian/queue"
+	. "github.com/r3inbowari/zlog"
 	"github.com/sirupsen/logrus"
 	"io"
 	"os"
@@ -17,6 +18,8 @@ import (
 	"sync"
 	"time"
 )
+
+var tag = "CLI"
 
 var CliPath = "cli.exe"
 
@@ -261,7 +264,7 @@ func (c *PackRequest) execCommand(commandName string, params ...string) (string,
 	for {
 		line, err2 := reader.ReadBytes('\n')
 		if err2 != nil || io.EOF == err2 {
-			Log.WithFields(logrus.Fields{"err": err2.Error()}).Info("[Cli] 已退出控制台")
+			Log.WithTag(tag).WithFields(logrus.Fields{"err": err2.Error()}).Info("已退出控制台")
 			break
 		}
 		lineStr := ConvertByte2StringInWindows(line, GB18030)
@@ -299,9 +302,9 @@ func Count(s string) bool {
 	return strings.Contains(s, "明天再来")
 }
 
-// CliOpen TODO cli可能出现奔溃
+// CliOpen TODO cli may be clash
 func CliOpen() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, CliPath, "open")
@@ -326,16 +329,16 @@ func GetBuildState(traceID string) *PackRequest {
 }
 
 func InitCli() {
-	Log.Info("[CLI] setting HBuilderX environment variables")
+	Log.WithTag(tag).Info("setting HBuilderX environment variables")
 	if runtime.GOOS == "darwin" {
 		CliPath = "/Applications/HBuilderX.app/Contents/MacOS/cli"
 	}
 
-	Log.Info("[CLI] starting HBuilderX")
+	Log.WithTag(tag).Info("starting HBuilderX")
 	err := CliOpen()
 	if err != nil {
-		Log.Error("[CLI] please make sure HBuilderX is installed or the execution path is correct")
-		Log.WithFields(logrus.Fields{"err": err.Error()}).Info("[CLI] exit")
+		Log.WithTag(tag).Error("please make sure HBuilderX is installed or the execution path is correct")
+		Log.WithTag(tag).WithFields(logrus.Fields{"err": err.Error()}).Info("exit")
 		time.Sleep(time.Minute)
 		os.Exit(1004)
 	}
@@ -345,7 +348,7 @@ func InitCli() {
 	AddExitFunc("HbuilderX", func() {
 		err := KillProcess(HBuilderXTargetName)
 		if err != nil {
-			Log.Warn("[CLI] panic during kill HBuilderX")
+			Log.WithTag(tag).Warn("panic during kill HBuilderX")
 			return
 		}
 	})
@@ -363,7 +366,7 @@ func (c *PackRequest) PackEnqueue() string {
 	// 打包请求入队
 	job := queue.NewJob("hello", c.executePack)
 	CliQueue.Push(job)
-	Log.WithFields(logrus.Fields{"user": c.Username, "traceID": c.TraceID, "order": cnt}).Info("[CLI] task enqueue")
+	Log.WithTag(tag).WithFields(logrus.Fields{"user": c.Username, "traceID": c.TraceID, "order": cnt}).Info("task enqueue")
 	return c.TraceID
 }
 
@@ -375,7 +378,7 @@ func (c *PackRequest) executePack(i interface{}) {
 	// 设置为运行状态
 	c.SetBuildState(StateRunning)
 	// 开始
-	Log.WithFields(logrus.Fields{"traceID": c.TraceID}).Info("[CLI] running task")
+	Log.WithTag(tag).WithFields(logrus.Fields{"traceID": c.TraceID}).Info("running task")
 
 	var err error
 	// 错误处理与善后
@@ -384,16 +387,16 @@ func (c *PackRequest) executePack(i interface{}) {
 		c.SetBuildState(StateOk)
 		if err != nil {
 			time.Sleep(time.Second)
-			Log.WithFields(logrus.Fields{"traceID": c.TraceID, "err": err.Error()}).Error("[CLI] task done with error")
+			Log.WithTag(tag).WithFields(logrus.Fields{"traceID": c.TraceID, "err": err.Error()}).Error("task done with error")
 			c.Reason = err.Error()
 			// 失败的话再次关闭
 			_ = CliCloseProject(c.Package)
 			c.SetBuildState(StateFailed)
 		} else {
-			Log.WithFields(logrus.Fields{"traceID": c.TraceID}).Info("[CLI] task done")
+			Log.WithTag(tag).WithFields(logrus.Fields{"traceID": c.TraceID}).Info("task done")
 		}
 		// 过程结束调用回调接口
-		Log.WithFields(logrus.Fields{"traceID": c.TraceID}).Info("[CLI] all done...bye (●’◡’●)ﾉ notify -> " + c.Callback)
+		Log.WithTag(tag).WithFields(logrus.Fields{"traceID": c.TraceID}).Info("all done...bye (●’◡’●)ﾉ notify -> " + c.Callback)
 		Get(c.Callback + "?trace=" + c.TraceID)
 		// 关闭 HBX
 		time.Sleep(time.Second * 1)
@@ -475,7 +478,7 @@ func (c *PackRequest) executePack(i interface{}) {
 
 	t.AddProcess("App 环境变量导入", func() error {
 		if !VerifyUUID(c.Export) {
-			Log.Warn("[CLI] 未导入环境变量 config.js")
+			Log.WithTag(tag).Warn("未导入环境变量 config.js")
 			return nil
 		}
 		exportPath := Up.RunPath + "/" + c.Package + "/utils/config.js"
