@@ -32,6 +32,8 @@ var (
 var mode = "DEV"
 
 func main() {
+	InitGlobalLogger()
+
 	kingpin.Version(fmt.Sprintf("%s git-%s build on %s", releaseVersion, gitHash, buildTime))
 	kingpin.Parse()
 	if *md {
@@ -51,8 +53,8 @@ func main() {
 	// 配置插件
 	meiwobuxing.InitConfig()
 	// 日志
-	InitGlobalLogger().SetBuildMode(mode).SetRotate(meiwobuxing.GetConfig(false).RotateEnable).SetScreen(true)
-	OpenTracker()
+	Log.SetBuildMode(mode).SetRotate(meiwobuxing.GetConfig(false).RotateEnable).SetScreen(true)
+	go OpenTracker()
 	// 更新服务与权限
 	meiwobuxing.SoftwareUpdate(false)
 	// 脚手架初始化
