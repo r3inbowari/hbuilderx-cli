@@ -2,7 +2,6 @@ package meiwobuxing
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -62,6 +61,6 @@ func KillProcess(target string) error {
 		return err
 	}
 	// kill it
-	Log.WithFields(logrus.Fields{"num": len(pids)}).Warn("[PD] not supported method")
+	fmt.Printf("[PD] not supported method, len: %d\n", len(pids))
 	return nil
 }

@@ -5,7 +5,7 @@
 # 编译前请确保已安装 git
 
 packageName=cmd
-appName=meiwobuxing
+appName=hbxctl
 buildVersion=v1.8.1
 major=1
 minor=8

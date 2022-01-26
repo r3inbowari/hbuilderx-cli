@@ -3,6 +3,7 @@ package meiwobuxing
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/r3inbowari/common"
 	. "github.com/r3inbowari/zlog"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -20,16 +21,17 @@ type PackRequest struct {
 	Package    string     `json:"package"`
 	PackConfig PackConfig `json:"packconfig"`
 	User
-	Callback     string   `json:"callback"`
-	State        int      `json:"state"`
-	TraceID      string   `json:"traceid"`
-	Reason       string   `json:"reason"`
-	Safe         HashLink `json:"safe"`
-	Certs        HashLink `json:"certs"`
-	Manifest     string   `json:"manifest"`
-	DownloadLink []string `json:"downloadlink"`
-	Log          string   `json:"log"`
-	Export       string   `json:"export"`
+	Callback     string            `json:"callback"`
+	State        int               `json:"state"`
+	TraceID      string            `json:"traceid"`
+	Reason       string            `json:"reason"`
+	Safe         HashLink          `json:"safe"`
+	Certs        HashLink          `json:"certs"`
+	Manifest     string            `json:"manifest"`
+	DownloadLink []string          `json:"downloadlink"`
+	Log          string            `json:"log"`
+	Export       string            `json:"export"`
+	Paths        map[string]string `json:"paths"`
 }
 
 type ManifestSetting struct {
@@ -260,7 +262,7 @@ func CallbackTest(w http.ResponseWriter, r *http.Request) {
 
 func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
+
 	if err != nil {
 		ResponseCommon(w, err.Error(), "request failed", 1, http.StatusOK, 6401)
 		return
@@ -277,4 +279,57 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ResponseCommon(w, token, "request succeed", 1, http.StatusOK, 6400)
+}
+
+func HandleAddPathMapping(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		ResponseCommon(w, err.Error(), "request failed", 1, http.StatusOK, 6401)
+		return
+	}
+	var pm PathMapping
+	err = json.Unmarshal(body, &pm)
+	if err != nil {
+		ResponseCommon(w, err.Error(), "request failed", 1, http.StatusOK, 6401)
+		return
+	}
+
+	// validate data at first
+	// path, name or type
+
+	// merge data and save to leveldb
+	key := common.CreateUUID()
+	err = SetJson("path", key, &pm)
+	if err != nil {
+		ResponseCommon(w, err.Error(), "request failed", 1, http.StatusOK, 6401)
+		return
+	}
+	ResponseCommon(w, key, "request succeed", 1, http.StatusOK, 6400)
+}
+
+func HandleAllPathMapping(w http.ResponseWriter, r *http.Request) {
+	items, err := Iter("path")
+	if err != nil {
+		ResponseCommon(w, err.Error(), "request failed", 1, http.StatusOK, 6401)
+		return
+	}
+	ResponseCommon(w, items, "request succeed", 1, http.StatusOK, 6400)
+}
+
+func HandleDelPathMapping(w http.ResponseWriter, r *http.Request) {
+	// only try!
+	_ = r.ParseForm()
+	id := r.Form.Get("id")
+	if !common.VerifyUUID(id) {
+		ResponseCommon(w, "invalid id", "request failed", 1, http.StatusOK, 6491)
+		return
+	}
+
+	err := Delete("path", id)
+	if err != nil {
+		ResponseCommon(w, err.Error(), "request failed", 1, http.StatusOK, 6401)
+		return
+	}
+	ResponseCommon(w, "ok", "request succeed", 1, http.StatusOK, 6400)
 }

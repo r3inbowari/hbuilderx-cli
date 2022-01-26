@@ -1,7 +1,7 @@
 @echo off
 
 set packageName=cmd
-set appName=meiwobuxing
+set appName=hbxctl
 set buildVersion=v1.8.1
 set major=1
 set minor=8

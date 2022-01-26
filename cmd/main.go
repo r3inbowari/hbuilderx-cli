@@ -2,11 +2,15 @@ package main
 
 import (
 	"fmt"
+	"github.com/dgraph-io/badger/v3"
+	"github.com/r3inbowari/common"
 	. "github.com/r3inbowari/zlog"
+	"github.com/r3inbowari/zupdate"
 	"meiwobuxing"
 	"os"
 	"os/user"
 	"runtime"
+	"strconv"
 	"time"
 
 	"github.com/hpcloud/tail"
@@ -20,20 +24,17 @@ var (
 )
 
 var (
-	gitHash        string
-	buildTime      string
-	goVersion      string
-	releaseVersion string
+	gitHash        = "cb0dc838e04e841f193f383e06e9d25a534c5809"
+	buildTime      = "Thu Oct 01 00:00:00 1970 +0800"
+	goVersion      = runtime.Version()
+	releaseVersion = "ver[DEV]"
 	major          string
 	minor          string
 	patch          string
+	mode           = "DEV"
 )
 
-var mode = "DEV"
-
 func main() {
-	InitGlobalLogger()
-
 	kingpin.Version(fmt.Sprintf("%s git-%s build on %s", releaseVersion, gitHash, buildTime))
 	kingpin.Parse()
 	if *md {
@@ -42,35 +43,65 @@ func main() {
 		fmt.Printf("[MD5] computed: %s\n", meiwobuxing.CalcJwtMD5(*username, *password))
 		return
 	}
+
+	meiwobuxing.Up = meiwobuxing.InitUpdate(buildTime, mode, releaseVersion, gitHash, major, minor, patch, "meiwobuxing")
+
+	InitGlobalLogger()
+	Log.SetScreen(true)
+
+	// 权限
+	perm := common.InitPermClient(common.PermOptions{
+		Log:         &Log.Logger,
+		CheckSource: "https://1077739472743245.cn-hangzhou.fc.aliyuncs.com/2016-08-15/proxy/perm.LATEST/perm",
+		AppId:       "acd3f8c51b",
+		ExpireAfter: time.Hour * 8760,
+	})
+	perm.Verify()
+
+	// 更新服务
+	updater := zupdate.InitUpdater(zupdate.UpdateOptions{
+		EntryName:   "hbxctl",
+		EntryArgs:   []string{},
+		Mode:        zupdate.REL,
+		Log:         &Log.Logger,
+		CheckSource: "https://120.77.33.188/resources/mate.json",
+	})
+	ma, _ := strconv.ParseInt(major, 10, 64)
+	mi, _ := strconv.ParseInt(minor, 10, 64)
+	pa, _ := strconv.ParseInt(patch, 10, 64)
+	updater.IncludeFile("5c74bf9c1face2dcb47bae100f2c664cdbd43404", zupdate.File{
+		Name:  "hbxctl",
+		Major: ma,
+		Minor: mi,
+		Patch: pa,
+	})
+	updater.CheckAndUpdate()
+
+	time.Sleep(time.Second)
 	// 退出信号拦截
 	meiwobuxing.InitSignalExit(func(signal os.Signal) {})
-	// 开发参数注入
-	dev()
-	// 更新插件
-	meiwobuxing.InitUpdate(buildTime, mode, releaseVersion, gitHash, major, minor, patch, "meiwobuxing", nil)
 	// 文件系统初始化
-	meiwobuxing.InitFileSystem(meiwobuxing.Up.RunPath, 100)
+	common.InitResSystem("./", 100)
+
+	// 本地数据库初始化
+	dbOpts := badger.DefaultOptions("./db")
+	dbOpts.Logger = Log
+	err := meiwobuxing.InitDB(dbOpts)
+	if err != nil {
+		Log.Error("[MAIN] init db failed, please feedback it to the developer.")
+		time.Sleep(time.Second * 5)
+		return
+	}
+
 	// 配置插件
 	meiwobuxing.InitConfig()
 	// 日志
-	Log.SetBuildMode(mode).SetRotate(meiwobuxing.GetConfig(false).RotateEnable).SetScreen(true)
+	Log.SetBuildMode(common.Modes[mode]).SetRotate(meiwobuxing.GetConfig(false).RotateEnable)
 	go OpenTracker()
-	// 更新服务与权限
-	meiwobuxing.SoftwareUpdate(false)
 	// 脚手架初始化
 	meiwobuxing.InitCli()
 	// 服务启动
 	meiwobuxing.CLIApplication()
-}
-
-func dev() {
-	if mode == "DEV" {
-		buildTime = "Thu Oct 01 00:00:00 1970 +0800"
-		gitHash = "cb0dc838e04e841f193f383e06e9d25a534c5809"
-		goVersion = runtime.Version()
-		releaseVersion = "ver[DEV]"
-		fmt.Printf("[D] go version: %s\n", goVersion)
-	}
 }
 
 func OpenTracker() {

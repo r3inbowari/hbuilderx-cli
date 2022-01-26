@@ -19,20 +19,53 @@ import (
 	"time"
 )
 
+type Info struct {
+	Patch           int64  // 0
+	Minor           int64  // 0
+	Major           int64  // 1
+	VersionStr      string // "v1.0.0"
+	BuildMode       string // dev
+	ReleaseTag      string // "cb0dc838e04e841f193f383e06e9d25a534c5809"
+	RuntimeOS       string // win
+	BuildTime       string // 2022
+	SucceedCallback func() // succeed
+	AppName         string // app dir
+	RunPath         string // 开发环境目录
+}
+
+var Up *Info
+
+func InitUpdate(buildTime, buildMode string, ver, hash string, major, minor, patch string, name string) *Info {
+	var ret Info
+	ret.AppName = name
+	ret.BuildMode = buildMode
+	ret.BuildTime = buildTime
+	ret.VersionStr = ver
+	ret.ReleaseTag = hash
+	ret.Major, _ = strconv.ParseInt(major, 10, 64)
+	ret.Minor, _ = strconv.ParseInt(minor, 10, 64)
+	ret.Patch, _ = strconv.ParseInt(patch, 10, 64)
+	ret.RuntimeOS = runtime.GOOS
+	ret.RunPath = "./"
+	return &ret
+}
+
 var tag = "CLI"
 
 var CliPath = "cli.exe"
 
 var (
-	ErrUnknown       = errors.New("unknown error")
-	ErrEmptyUserInfo = errors.New("empty user info")
-	ErrErrorUserInfo = errors.New("error user info")
-	ErrOpenCLI       = errors.New("open failed")
-	ErrLogout        = errors.New("logout failed")
-	ErrNonExist      = errors.New("non exist dir")
-	ErrCopyAndroid   = errors.New("安卓文件转移失败")
-	ErrCopyIOS       = errors.New("IOS文件转移失败")
-	ErrCopyProject   = errors.New("项目文件转移失败")
+	ErrUnknown           = errors.New("unknown error")
+	ErrEmptyUserInfo     = errors.New("empty user info")
+	ErrErrorUserInfo     = errors.New("error user info")
+	ErrOpenCLI           = errors.New("open failed")
+	ErrLogout            = errors.New("logout failed")
+	ErrNonExist          = errors.New("non exist dir")
+	ErrCopyAndroid       = errors.New("安卓文件转移失败")
+	ErrCopyIOS           = errors.New("IOS文件转移失败")
+	ErrCopyProject       = errors.New("项目文件转移失败")
+	ErrResCopy           = errors.New("错误的资源拷贝过程")
+	ErrPathMappingResult = errors.New("无效的路径映射结果")
 )
 
 var CliQueue *queue.Queue // 打包信号
@@ -441,22 +474,51 @@ func (c *PackRequest) executePack(i interface{}) {
 	t.AddProcess("打开项目", func() error {
 		return CliOpenProject(c.Package)
 	}, 1)
-	t.AddProcess("Android 安全图拷贝", func() error {
-		// 拷贝安卓安全图
-		androidPath := Up.RunPath + "/" + c.Package + "/nativeplugins/Html5app-Baichuan/android/res/drawable/yw_1222.jpg"
-		if CopyFormRes(c.Safe.Android, androidPath) != nil {
-			return ErrCopyAndroid
+
+	// 替换任务
+	// todo 替换还原
+	t.AddProcess("文件替换", func() error {
+		// 检索 paths 参数列表
+		for pathKey, resID := range c.Paths {
+			// 刷新 pm
+			var pm PathMapping
+			// 检出 path 档案
+			e := GetJson("path", pathKey, &pm)
+			// 无效的映射结果：1.不存在 2.初始化问题 3.检出失败
+			if pm.Type == PathTypeInvalid || e != nil {
+				Log.WithTag(tag).WithField("pathId", pathKey).Error("无效的路径映射结果...")
+				return ErrPathMappingResult
+			}
+
+			// 创建映射路径
+			dstPath := Up.RunPath + "/" + c.Package + pm.Path
+			// 将资源拷贝到目标路径
+			if CopyFormRes(resID, dstPath) != nil {
+				// 存在错误的拷贝过程
+				return ErrResCopy
+			}
+			Log.WithTag(tag).WithField("pathId", pathKey).Infof("path mapping %s -> %s", pm.Name, dstPath)
 		}
 		return nil
 	})
-	t.AddProcess("IOS 安全图拷贝", func() error {
-		// 拷贝IOS安全图
-		iosPath := Up.RunPath + "/" + c.Package + "/nativeplugins/Html5app-Baichuan/ios/yw_1222.jpg"
-		if CopyFormRes(c.Safe.IOS, iosPath) != nil {
-			return ErrCopyIOS
-		}
-		return nil
-	})
+
+	//t.AddProcess("Android 安全图拷贝", func() error {
+	//	// 拷贝安卓安全图
+	//	androidPath := Up.RunPath + "/" + c.Package + "/nativeplugins/Html5app-Baichuan/android/res/drawable/yw_1222.jpg"
+	//	if CopyFormRes(c.Safe.Android, androidPath) != nil {
+	//		return ErrCopyAndroid
+	//	}
+	//	return nil
+	//})
+	//t.AddProcess("IOS 安全图拷贝", func() error {
+	//	// 拷贝IOS安全图
+	//	iosPath := Up.RunPath + "/" + c.Package + "/nativeplugins/Html5app-Baichuan/ios/yw_1222.jpg"
+	//	if CopyFormRes(c.Safe.IOS, iosPath) != nil {
+	//		return ErrCopyIOS
+	//	}
+	//	return nil
+	//})
+
 	t.AddProcess("Manifest 转换", func() error {
 		manifest, err1 := OpenManifest(c.Manifest)
 		if err1 != nil {

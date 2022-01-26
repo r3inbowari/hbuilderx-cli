@@ -11,3 +11,7 @@ build/*
 .DS_Store
 .vscode
 bili.json
+
+db
+
+cmd.exe

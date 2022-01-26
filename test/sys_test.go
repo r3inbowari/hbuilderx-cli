@@ -3,7 +3,6 @@ package test
 import (
 	"fmt"
 	. "github.com/klauspost/cpuid/v2"
-	"meiwobuxing"
 	"strings"
 	"testing"
 )
@@ -27,5 +26,5 @@ func TestCPU(t *testing.T) {
 		fmt.Println("We have Streaming SIMD 2 Extensions")
 	}
 
-	println(meiwobuxing.MixCPUInfo())
+	println("a")
 }
