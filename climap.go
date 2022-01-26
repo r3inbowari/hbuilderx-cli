@@ -156,7 +156,7 @@ func HandlePackState(w http.ResponseWriter, r *http.Request) {
 func FileUpload(w http.ResponseWriter, r *http.Request) {
 	uuid := CreateUUID()
 	uploadFile, handle, err := r.FormFile("file")
-	saveFile, err := os.OpenFile(GetPath(uuid), os.O_WRONLY|os.O_CREATE, 0777)
+	saveFile, err := os.OpenFile(GetPath(uuid), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil || handle == nil {
 		ResponseCommon(w, "upload failed", "request failed", 1, http.StatusOK, 6405)
 		return
@@ -168,6 +168,30 @@ func FileUpload(w http.ResponseWriter, r *http.Request) {
 		uploadFile.Close()
 	}()
 	ResponseCommon(w, uuid, "upload succeed", 1, http.StatusOK, 6400)
+}
+
+func HandleUploadProject(w http.ResponseWriter, r *http.Request) {
+	id := GetMD5(CreateUUID())
+	uploadFile, handle, err := r.FormFile("file")
+	saveFile, err := os.OpenFile("./"+id, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+	if err != nil || handle == nil {
+		ResponseCommon(w, "upload failed", "request failed", 1, http.StatusOK, 6405)
+		return
+	}
+	_, _ = io.Copy(saveFile, uploadFile)
+
+	defer func() {
+		saveFile.Close()
+		uploadFile.Close()
+		_ = os.Remove("./" + id)
+	}()
+
+	err = Unzip("./"+id, "./")
+	if err != nil {
+		ResponseCommon(w, "unzip failed", "request failed", 1, http.StatusOK, 6405)
+		return
+	}
+	ResponseCommon(w, "ok", "upload succeed", 1, http.StatusOK, 6400)
 }
 
 func FileDownload(w http.ResponseWriter, r *http.Request) {

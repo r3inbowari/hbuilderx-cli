@@ -2,10 +2,10 @@
 
 set packageName=cmd
 set appName=hbxctl
-set buildVersion=v1.8.1
+set buildVersion=v1.9.0
 set major=1
-set minor=8
-set patch=1
+set minor=9
+set patch=0
 set mode=REL
 
 for /f "delims=" %%i in ('go version') do (set goVersion=%%i)

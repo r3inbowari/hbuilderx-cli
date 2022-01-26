@@ -33,6 +33,8 @@ func CLIApplication() {
 	s.Map("/path", HandleDelPathMapping, http.MethodDelete)
 	s.Map("/paths", HandleAllPathMapping, http.MethodGet)
 
+	s.Map("/project", HandleUploadProject, http.MethodPost)
+
 	s.R.Use(s.AuthMiddlewareBuilder(func(token string, r *http.Request) error {
 		return CheckToken(token)
 	}))

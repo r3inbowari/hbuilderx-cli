@@ -27,3 +27,7 @@ func TestVerifyUUID(t *testing.T) {
 func TestGenAppConfig(t *testing.T) {
 
 }
+
+func TestUnzip(t *testing.T) {
+	meiwobuxing.Unzip("C:\\Users\\inven\\Desktop\\hbuilderx-cli\\test\\a.zip", "C:\\Users\\inven\\Desktop\\hbuilderx-cli\\test\\")
+}
