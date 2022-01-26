@@ -249,7 +249,7 @@ func Unzip(zipFile string, destDir string) error {
 			}
 			defer inFile.Close()
 
-			outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+			outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 			if err != nil {
 				return err
 			}

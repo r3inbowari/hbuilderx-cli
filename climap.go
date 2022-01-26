@@ -188,7 +188,7 @@ func HandleUploadProject(w http.ResponseWriter, r *http.Request) {
 
 	err = Unzip("./"+id, "./")
 	if err != nil {
-		ResponseCommon(w, "unzip failed", "request failed", 1, http.StatusOK, 6405)
+		ResponseCommon(w, "unzip failed err: "+err.Error(), "request failed", 1, http.StatusOK, 6405)
 		return
 	}
 	ResponseCommon(w, "ok", "upload succeed", 1, http.StatusOK, 6400)
