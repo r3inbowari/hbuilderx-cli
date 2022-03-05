@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/r3inbowari/common"
 	. "github.com/r3inbowari/zlog"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -213,19 +214,19 @@ type Mp struct {
 
 func OpenManifest(uuid string) (*Manifest, error) {
 	var mf Manifest
-	err := OpenJsonFromRes(uuid, &mf)
+	err := common.OpenJsonFromRes(uuid, &mf)
 	mf.UUID = uuid
 	return &mf, err
 }
 
 func (ts *Manifest) Save() (string, error) {
 	id := CreateUUID()
-	return id, SaveJsonFromHtml(GetPath(id), ts)
+	return id, SaveJsonFromHtml(common.GetPath(id), ts)
 }
 
 func (ts *Manifest) Update() error {
 	if ts.UUID != "" {
-		return SaveJsonFromHtml(GetPath(ts.UUID), ts)
+		return SaveJsonFromHtml(common.GetPath(ts.UUID), ts)
 	} else {
 		return errors.New("can not update a new manifest")
 	}
@@ -301,7 +302,7 @@ func (m *ManifestConvertor) convert(vs ...*string) {
 	for _, v := range vs {
 		if VerifyUUID(*v) {
 			// 覆盖资源-uuid转换
-			*v = GetPath(*v)
+			*v = common.GetPath(*v)
 			Log.WithFields(logrus.Fields{"item-trace": *v}).Info("[CLI] convert a uuid manifest")
 		} else if !filepath.IsAbs(*v) {
 			// 原始资源-相对路径转换
@@ -309,10 +310,11 @@ func (m *ManifestConvertor) convert(vs ...*string) {
 			if err != nil {
 				return
 			}
-			Log.WithFields(logrus.Fields{"item-trace": *v}).Info("[CLI] convert a origin tag")
+			Log.WithFields(logrus.Fields{"item-trace": *v}).Info("[CLI] convert a absolute origin tag")
 			*v = abs
 		} else {
 			// 原始资源-绝对路径不处理
+			Log.WithFields(logrus.Fields{"item-trace": *v}).Info("[CLI] convert a relative origin tag")
 		}
 		// 统一检查文件是否存在
 		if !Exists(*v) {

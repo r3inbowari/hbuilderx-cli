@@ -7,11 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/LyricTian/queue"
+	"github.com/r3inbowari/common"
 	. "github.com/r3inbowari/zlog"
 	"github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -46,7 +48,22 @@ func InitUpdate(buildTime, buildMode string, ver, hash string, major, minor, pat
 	ret.Minor, _ = strconv.ParseInt(minor, 10, 64)
 	ret.Patch, _ = strconv.ParseInt(patch, 10, 64)
 	ret.RuntimeOS = runtime.GOOS
-	ret.RunPath = "./"
+	// ret.RunPath = "./"
+	if ret.BuildMode != "DEV" {
+		var err error
+		ret.RunPath, err = filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			Log.Error("[UP] unknown panic")
+			time.Sleep(time.Second * 5)
+			os.Exit(1005)
+		}
+	} else {
+		// 开发环境路径
+		// MACOS
+		// retUpdate.RunPath = "/Users/r3inb/Downloads/meiwobuxing"
+		// Windows
+		ret.RunPath = "C:\\Users\\inven\\Desktop\\hbuilderx-cli"
+	}
 	return &ret
 }
 
@@ -319,7 +336,7 @@ func (c *PackRequest) execCommand(commandName string, params ...string) (string,
 }
 
 func (c *PackRequest) CliPack() error {
-	output, err := c.execCommand(CliPath, "pack", "--config", GetPath(c.TraceID))
+	output, err := c.execCommand(CliPath, "pack", "--config", common.GetPath(c.TraceID))
 	if err != nil {
 		return err
 	}
@@ -404,7 +421,7 @@ func (c *PackRequest) PackEnqueue() string {
 }
 
 func (c *PackRequest) savePackConfig() error {
-	return SaveJsonToRes(c.TraceID, c.PackConfig)
+	return common.SaveJsonToRes(c.TraceID, c.PackConfig)
 }
 
 func (c *PackRequest) executePack(i interface{}) {
@@ -452,15 +469,15 @@ func (c *PackRequest) executePack(i interface{}) {
 	t.AddProcess("Android 证书替换", func() error {
 		// keystore
 		if VerifyUUID(c.Certs.Android) {
-			c.PackConfig.Android.CertFile = GetPath(c.Certs.Android)
+			c.PackConfig.Android.CertFile = common.GetPath(c.Certs.Android)
 		}
 		return nil
 	})
 	t.AddProcess("IOS 证书替换", func() error {
 		// p12/mobileprovision
 		if VerifyUUID(c.Certs.IOS) && VerifyUUID(c.Certs.IOSEx) {
-			c.PackConfig.IOS.CertFile = GetPath(c.Certs.IOS)
-			c.PackConfig.IOS.Profile = GetPath(c.Certs.IOSEx)
+			c.PackConfig.IOS.CertFile = common.GetPath(c.Certs.IOS)
+			c.PackConfig.IOS.Profile = common.GetPath(c.Certs.IOSEx)
 		}
 		return nil
 	})
@@ -483,18 +500,30 @@ func (c *PackRequest) executePack(i interface{}) {
 			// 刷新 pm
 			var pm PathMapping
 			// 检出 path 档案
-			e := GetJson("path", pathKey, &pm)
-			// 无效的映射结果：1.不存在 2.初始化问题 3.检出失败
-			if pm.Type == PathTypeInvalid || e != nil {
-				Log.WithTag(tag).WithField("pathId", pathKey).Error("无效的路径映射结果...")
-				return ErrPathMappingResult
-			}
+			_ = GetJson("path", pathKey, &pm)
+			dstPath := ""
 
-			// 创建映射路径
-			dstPath := Up.RunPath + "/" + c.Package + pm.Path
-			// 将资源拷贝到目标路径
-			if CopyFormRes(resID, dstPath) != nil {
+			switch pm.Type {
+			case PathTypeInvalid:
+				// 无效的映射结果：1.不存在 2.初始化问题 3.检出失败
+				Log.WithTag(tag).WithField("pathId", pathKey).Error("无效的路径映射项")
+				return ErrPathMappingResult
+			case PathTypeIOSCert:
+				dstPath = fmt.Sprintf("%s%s%s", Up.RunPath, "/certs/ios/", pm.Name)
+			case PathTypeAndroidCert:
+				dstPath = fmt.Sprintf("%s%s%s", Up.RunPath, "/certs/android/", pm.Name)
+			case PathTypeFileObject:
+				if filepath.IsAbs(pm.Path) {
+					// 创建映射路径
+					dstPath = fmt.Sprintf("%s/%s", pm.Path, pm.Name)
+				} else {
+					dstPath = fmt.Sprintf("%s/%s%s/%s", Up.RunPath, c.Package, pm.Path, pm.Name)
+				}
+			}
+			// 将资源拷贝到证书目录
+			if common.CopyFormRes(resID, dstPath) != nil {
 				// 存在错误的拷贝过程
+				Log.WithTag(tag).WithField("pathId", pathKey).Errorf("path mapping error %s -> certs dir", pm.Name)
 				return ErrResCopy
 			}
 			Log.WithTag(tag).WithField("pathId", pathKey).Infof("path mapping %s -> %s", pm.Name, dstPath)
@@ -531,7 +560,7 @@ func (c *PackRequest) executePack(i interface{}) {
 		}
 		// 拷贝到项目
 		manifestPath := Up.RunPath + "/" + c.Package + "/manifest.json"
-		if CopyFormRes(c.Manifest, manifestPath) != nil {
+		if common.CopyFormRes(c.Manifest, manifestPath) != nil {
 			err1 = ErrCopyProject
 			return err1
 		}
@@ -544,7 +573,7 @@ func (c *PackRequest) executePack(i interface{}) {
 			return nil
 		}
 		exportPath := Up.RunPath + "/" + c.Package + "/utils/config.js"
-		if CopyFormRes(c.Export, exportPath) != nil {
+		if common.CopyFormRes(c.Export, exportPath) != nil {
 			return ErrCopyProject
 		}
 		return nil

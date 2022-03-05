@@ -77,11 +77,17 @@ func main() {
 	})
 	updater.CheckAndUpdate()
 
+	if !meiwobuxing.Exists(meiwobuxing.Up.RunPath + "/certs") {
+		_ = os.Mkdir(meiwobuxing.Up.RunPath+"/certs", os.ModePerm)
+		_ = os.Mkdir(meiwobuxing.Up.RunPath+"/certs/android", os.ModePerm)
+		_ = os.Mkdir(meiwobuxing.Up.RunPath+"/certs/ios", os.ModePerm)
+	}
+
 	time.Sleep(time.Second)
 	// 退出信号拦截
 	meiwobuxing.InitSignalExit(func(signal os.Signal) {})
 	// 文件系统初始化
-	common.InitResSystem("./", 100)
+	common.InitResSystem(meiwobuxing.Up.RunPath+"/", 100)
 
 	// 本地数据库初始化
 	dbOpts := badger.DefaultOptions("./db")

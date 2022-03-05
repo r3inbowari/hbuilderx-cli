@@ -156,7 +156,7 @@ func HandlePackState(w http.ResponseWriter, r *http.Request) {
 func FileUpload(w http.ResponseWriter, r *http.Request) {
 	uuid := CreateUUID()
 	uploadFile, handle, err := r.FormFile("file")
-	saveFile, err := os.OpenFile(GetPath(uuid), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+	saveFile, err := os.OpenFile(common.GetPath(uuid), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil || handle == nil {
 		ResponseCommon(w, "upload failed", "request failed", 1, http.StatusOK, 6405)
 		return
@@ -197,7 +197,7 @@ func HandleUploadProject(w http.ResponseWriter, r *http.Request) {
 func FileDownload(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	fileID := vars["id"]
-	path := GetPath(fileID)
+	path := common.GetPath(fileID)
 	file, _ := os.Open(path)
 	defer file.Close()
 	fileHeader := make([]byte, 512)
@@ -273,7 +273,7 @@ func ExportElements(w http.ResponseWriter, r *http.Request) {
 	}
 	s := j2m.GenJs()
 	c := CreateUUID()
-	err = SaveBytesToRes(c, []byte(s))
+	err = common.SaveBytesToRes(c, []byte(s))
 	ResponseCommon(w, c, "request succeed", 1, http.StatusOK, 6400)
 }
 

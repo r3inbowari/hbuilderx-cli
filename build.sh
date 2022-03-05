@@ -6,10 +6,10 @@
 
 packageName=cmd
 appName=hbxctl
-buildVersion=v1.9.0
+buildVersion=v1.9.2
 major=1
 minor=9
-patch=0
+patch=2
 mode=REL
 
 goVersion=$(go version)
